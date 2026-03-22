@@ -24,40 +24,13 @@ class Mutex {
     Mutex& operator=(const Mutex&) = delete;
 
     void Lock() {
-        int expected = 0;
-        if (state_.compare_exchange_strong(expected, 1,
-                                           std::memory_order_acquire,
-                                           std::memory_order_relaxed)) {
-            return;
-        }
-
-        while (true) {
-            expected = 0;
-            if (state_.compare_exchange_strong(expected, 2,
-                                               std::memory_order_acquire,
-                                               std::memory_order_relaxed)) {
-                return;
-            }
-
-            if (expected == 1) {
-                if (state_.compare_exchange_strong(expected, 2,
-                                                   std::memory_order_acquire,
-                                                   std::memory_order_relaxed)) {
-                    FutexWait(&state_, 2);
-                } else {
-                    continue;
-                }
-            } else {
-                FutexWait(&state_, 2);
-            }
+        while (state_.exchange(2, std::memory_order_acquire) != 0) {
+            FutexWait(&state_, 2);
         }
     }
 
     void Unlock() {
-        const int old = state_.fetch_sub(1, std::memory_order_release);
-
-        if (old != 1) {
-            state_.store(0, std::memory_order_release);
+        if (state_.exchange(0, std::memory_order_release) == 2) {
             FutexWake(&state_, 1);
         }
     }
