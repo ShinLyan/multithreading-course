@@ -22,8 +22,6 @@ int main(int argc, char** argv) {
 
     std::cout << "[consumer] started, type=" << expected_type << "\n";
 
-    bool was_empty = false;
-
     while (true) {
         ReceivedMessage msg;
 
@@ -36,11 +34,11 @@ int main(int argc, char** argv) {
 
             if (msg.type == kNumberMessageType && msg.size == sizeof(int)) {
                 int value;
-                std::memcpy(&value, msg.data, sizeof(int));
+                std::memcpy(&value, msg.data.data(), sizeof(int));
 
                 std::cout << "  data (int): " << value << "\n";
             } else {
-                std::cout << "  data (text): " << msg.data << "\n";
+                std::cout << "  data (text): " << msg.data.data() << "\n";
             }
         } else {
             if (consumer.GetProducerCount() == 0) {

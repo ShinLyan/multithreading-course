@@ -4,6 +4,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
+#include <cstring>
 #include <iostream>
 
 ConsumerNode::ConsumerNode(const char* shared_memory_name,
@@ -74,9 +75,12 @@ bool ConsumerNode::ReadNextMessage(ReceivedMessage& message) {
         if (message_header->type == expected_type_) {
             message.type = message_header->type;
             message.size = message_header->size;
-            message.data = buffer + head_index + sizeof(MessageHeader);
 
+            const char* src = buffer + head_index + sizeof(MessageHeader);
+            message.data.resize(message.size);
+            std::memcpy(message.data.data(), src, message.size);
             header_->head.store(head + message_size, std::memory_order_release);
+
             return true;
         } else {
             header_->head.store(head + message_size, std::memory_order_release);

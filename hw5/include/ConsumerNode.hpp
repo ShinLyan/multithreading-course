@@ -1,11 +1,13 @@
 #pragma once
 
+#include <vector>
+
 #include "Queue.hpp"
 
 struct ReceivedMessage {
     uint32_t type;
     uint32_t size;
-    const char* data;
+    std::vector<char> data;
 };
 
 class ConsumerNode {
